@@ -1,50 +1,42 @@
-# 修改后的配置文件 GUI 编辑器
-# - 自动创建默认 configuration.ini（若不存在）
-# - 支持文件/文件夹选择器，限制格式，检查路径/格式/日志等
-# - section 中文名称显示、分割线、固定窗口尺寸、微软雅黑字体
-# - ✅ 添加 "运行下载器" 按钮，弹出终端运行 work-ui.py
-# - ✅ 支持打包路径识别，确保 .exe 中可以调用副程序
+# 导入必要的库
+import tkinter as tk  # tkinter 是 Python 的标准 GUI 库
+from tkinter import ttk, messagebox, filedialog  # ttk 提供更美观的控件，messagebox 和 filedialog 用于对话框
+from configparser import ConfigParser  # 用于读取和写入 INI 配置文件
+import os  # 操作文件系统用
 
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-from configparser import ConfigParser
-import os
-import subprocess
-import sys
-
-# 配置文件名称
+# 配置文件名
 INI_FILE = 'configuration.ini'
 
-# 默认配置内容（按三个 section 分类）
+# 配置文件的默认内容（包含路径设置、下载参数、图块拼接参数）
 DEFAULT_CONFIG = {
     'PATHS': {
-        'csv_path': 'POINTS.csv',  # 点位CSV路径
-        'api_key_path': 'api_key.txt',  # API密钥路径
-        'save_dir': 'output_dir',  # 保存图像目录
-        'log_path': 'download_log.csv',  # 成功日志
-        'fail_log_path': 'failed_log.csv'  # 失败日志
+        'csv_path': 'POINTS.csv',
+        'api_key_path': 'api_key.txt',
+        'save_dir': 'output_dir',
+        'log_path': 'download_log.csv',
+        'fail_log_path': 'failed_log.csv'
     },
     'PARAMS': {
-        'batch_size': '10',  # 每批下载点数
-        'num_batches': '3'  # 批次数量
+        'batch_size': '10',
+        'num_batches': '3'
     },
     'TILES': {
-        'zoom': '1',  # 缩放等级
-        'tile_size': '512',  # 图块尺寸
-        'tile_cols': '2',  # 横向图块数
-        'tile_rows': '1',  # 纵向图块数
-        'sleeptime': '0.02'  # 请求间隔
+        'zoom': '1',
+        'tile_size': '512',
+        'tile_cols': '2',
+        'tile_rows': '1',
+        'sleeptime': '0.02'
     }
 }
 
-# section 显示的中文名
+# 各配置部分的中文标题
 SECTION_NAME_MAP = {
     'PATHS': '路径配置',
     'PARAMS': '下载参数',
     'TILES': '图块参数',
 }
 
-# 每个参数的中文标签
+# 每个参数字段的中文标签
 LABEL_MAP = {
     'csv_path': '点位CSV文件',
     'api_key_path': 'API密钥文件',
@@ -60,7 +52,7 @@ LABEL_MAP = {
     'sleeptime': '请求间隔时间（秒）',
 }
 
-# 特殊路径字段及其选择器类型（文件/目录）
+# 指定哪些字段需要使用文件/文件夹选择器，以及对应的文件类型过滤
 PATH_KEYS = {
     'csv_path': ('file', [('CSV 文件', '*.csv')]),
     'api_key_path': ('file', [('文本文件', '*.txt'), ('所有文件', '*.*')]),
@@ -69,7 +61,7 @@ PATH_KEYS = {
     'fail_log_path': ('file', [('CSV 文件', '*.csv')]),
 }
 
-# 如果配置文件不存在，创建默认配置文件
+# 如果配置文件不存在，自动生成默认配置文件
 if not os.path.exists(INI_FILE):
     config = ConfigParser()
     for section, items in DEFAULT_CONFIG.items():
@@ -77,27 +69,31 @@ if not os.path.exists(INI_FILE):
     with open(INI_FILE, 'w', encoding='utf-8') as f:
         config.write(f)
 
-# 主类：配置编辑器 GUI
+# GUI 主类
 class ConfigEditor:
     def __init__(self, root):
+        # 初始化窗口属性
         self.root = root
-        self.root.title("谷歌街景下载器")
+        self.root.title("谷歌街景下载器配置编辑器")
         self.root.update_idletasks()
         width = self.root.winfo_width()
         height = self.root.winfo_height()
         self.root.minsize(width, height)
         self.root.resizable(False, False)
+
+        # 设置字体
         self.default_font = ("微软雅黑", 10)
         self.section_font = ("微软雅黑", 12, "bold")
 
+        # 加载配置文件
         self.config = ConfigParser()
         self.config.read(INI_FILE, encoding='utf-8')
 
-        self.entries = {}  # 存储所有 Entry 控件
-        self.check_and_initialize_logs()  # 初始化日志文件
-        self.build_form()  # 构建 GUI 表单
+        self.entries = {}  # 存储输入框控件
+        self.check_and_initialize_logs()  # 自动初始化日志文件
+        self.build_form()  # 构建界面表单
 
-    # 自动创建日志文件（若不存在）
+    # 初始化日志文件（如果文件不存在则创建）
     def check_and_initialize_logs(self):
         for section in self.config.sections():
             for key in self.config[section]:
@@ -113,10 +109,11 @@ class ConfigEditor:
                         except Exception as e:
                             print(f"⚠️ 无法创建日志文件 {path}：{e}")
 
-    # 构建窗口控件（表单布局）
+    # 构建图形界面表单
     def build_form(self):
         row = 0
         for section in self.config.sections():
+            # 添加分隔线和 Section 中文标题
             section_name = SECTION_NAME_MAP.get(section, section)
             frame = ttk.Separator(self.root, orient='horizontal')
             frame.grid(row=row, column=0, columnspan=3, sticky='ew', pady=(10, 2))
@@ -125,16 +122,19 @@ class ConfigEditor:
             label.grid(row=row, column=0, columnspan=3, sticky='w', padx=10)
             row += 1
 
+            # 遍历该 section 的每个参数字段
             for key, value in self.config[section].items():
                 cn_label = LABEL_MAP.get(key.lower(), '')
                 display_name = f"{cn_label}（{key}）" if cn_label else key
                 ttk.Label(self.root, text=display_name, font=self.default_font).grid(row=row, column=0, sticky='e', padx=10)
 
+                # 创建输入框
                 entry = ttk.Entry(self.root, width=40, font=self.default_font)
                 entry.insert(0, value)
                 entry.grid(row=row, column=1, padx=10, pady=2)
                 self.entries[(section, key)] = entry
 
+                # 如果是路径字段，添加“选择”按钮
                 if key.lower() in PATH_KEYS:
                     btn = ttk.Button(self.root, text="选择", command=lambda k=(section, key): self.select_path(k))
                     btn.grid(row=row, column=2, padx=5)
@@ -145,17 +145,13 @@ class ConfigEditor:
         save_btn = ttk.Button(self.root, text="保存配置", command=self.save_config)
         save_btn.grid(row=row, column=0, columnspan=3, pady=10)
 
-        # 运行下载器按钮（调用 work-ui.py）
-        run_btn = ttk.Button(self.root, text="运行下载器", command=self.run_downloader)
-        run_btn.grid(row=row+1, column=0, columnspan=3, pady=(0, 10))
-
-    # 文件/文件夹选择器
+    # 文件或文件夹路径选择器
     def select_path(self, key_tuple):
         section, key = key_tuple
         path_type, filetypes = PATH_KEYS.get(key.lower(), ('file', None))
         if path_type == 'dir':
             path = filedialog.askdirectory()
-            # ✅ 若用户选择了输出目录，但目录不存在，则自动创建
+            # 如果目录不存在，自动创建
             if path and not os.path.exists(path):
                 try:
                     os.makedirs(path, exist_ok=True)
@@ -169,13 +165,13 @@ class ConfigEditor:
             self.entries[(section, key)].delete(0, tk.END)
             self.entries[(section, key)].insert(0, path)
 
-
- # 保存配置到 INI 文件
+    # 保存配置并校验输入格式
     def save_config(self):
         for (section, key), entry in self.entries.items():
             value = entry.get()
+
+            # 如果是路径字段，尝试自动创建必要目录/文件
             if key.lower() in PATH_KEYS:
-                # ✅ 自动创建目录或文件（如不存在）
                 try:
                     if key.lower() == 'save_dir':
                         os.makedirs(value, exist_ok=True)
@@ -197,11 +193,13 @@ class ConfigEditor:
                     messagebox.showerror("创建失败", f"[{section}] {key} 自动创建失败：{e}")
                     return
 
+            # 校验整数字段
             elif key.lower() in {'batch_size', 'num_batches', 'zoom', 'tile_size', 'tile_cols', 'tile_rows'}:
                 if not value.isdigit():
                     messagebox.showerror("输入格式错误", f"[{section}] {key} 必须是整数")
                     return
 
+            # 校验浮点字段
             elif key.lower() == 'sleeptime':
                 try:
                     float(value)
@@ -209,38 +207,25 @@ class ConfigEditor:
                     messagebox.showerror("输入格式错误", f"[{section}] sleeptime 必须是浮点数")
                     return
 
+            # 赋值到配置中
             self.config[section][key] = value
 
+        # 写入 INI 配置文件
         with open(INI_FILE, 'w', encoding='utf-8') as f:
             self.config.write(f)
 
         messagebox.showinfo("保存成功", f"配置文件已保存到 {INI_FILE}")
 
-    def run_downloader(self):
-        try:
-            # 判断是否在 PyInstaller 打包环境中
-            if getattr(sys, 'frozen', False):
-                base_path = sys._MEIPASS
-            else:
-                base_path = os.path.dirname(os.path.abspath(__file__))
-
-            exe_path = os.path.join(base_path, 'work-ui.exe')
-
-            if not os.path.exists(exe_path):
-                raise FileNotFoundError(f"找不到打包的副程序 work-ui.exe：{exe_path}")
-
-            subprocess.Popen([exe_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-        except Exception as e:
-            messagebox.showerror("运行失败", f"无法启动下载器：{e}")
-
-# 启动主程序
+# 主程序入口
 if __name__ == '__main__':
     try:
+        # 兼容 Windows 高分屏显示
         from ctypes import windll
-        windll.shcore.SetProcessDpiAwareness(1)  # 高分辨率支持
+        windll.shcore.SetProcessDpiAwareness(1)
     except:
         pass
 
+    # 启动 GUI 窗口
     root = tk.Tk()
     app = ConfigEditor(root)
     root.mainloop()
