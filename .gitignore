@@ -9,6 +9,7 @@ package_ui.bat
 package_downloader.bat
 *.bat
 *.spec
+git-filter-repo.py
 
 # 忽略保存图像的目录（如果你用 SAVE_DIR）
 output/
