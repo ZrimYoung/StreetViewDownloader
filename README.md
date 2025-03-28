@@ -85,8 +85,14 @@ SVIDownloaderConfiguration.exe
 运行主下载脚本：
 
 ```bash
-python DOWNLOAD.py
+python DOWNLOAD.py #（单线程）
 ```
+或者
+
+```bash
+python DOWNLOAD-Multithreads.py #（多线程）
+```
+
 
 功能包括：
 - 自动请求 panoId
