@@ -81,7 +81,7 @@ if not os.path.exists(INI_FILE):
 class ConfigEditor:
     def __init__(self, root):
         self.root = root
-        self.root.title("配置文件编辑器 (configuration.ini)")
+        self.root.title("谷歌街景下载器")
         self.root.update_idletasks()
         width = self.root.winfo_width()
         height = self.root.winfo_height()
@@ -155,30 +155,60 @@ class ConfigEditor:
         path_type, filetypes = PATH_KEYS.get(key.lower(), ('file', None))
         if path_type == 'dir':
             path = filedialog.askdirectory()
+            # ✅ 若用户选择了输出目录，但目录不存在，则自动创建
+            if path and not os.path.exists(path):
+                try:
+                    os.makedirs(path, exist_ok=True)
+                except Exception as e:
+                    messagebox.showerror("目录创建失败", f"无法创建目录：{path}\n{e}")
+                    return
         else:
             path = filedialog.askopenfilename(filetypes=filetypes)
+
         if path:
             self.entries[(section, key)].delete(0, tk.END)
             self.entries[(section, key)].insert(0, path)
 
-    # 保存配置到 INI 文件
+
+ # 保存配置到 INI 文件
     def save_config(self):
         for (section, key), entry in self.entries.items():
             value = entry.get()
             if key.lower() in PATH_KEYS:
-                if not os.path.exists(value):
-                    messagebox.showerror("路径不存在", f"[{section}] {key} 路径不存在：{value}")
+                # ✅ 自动创建目录或文件（如不存在）
+                try:
+                    if key.lower() == 'save_dir':
+                        os.makedirs(value, exist_ok=True)
+                    elif key.lower().endswith('_log_path') or key.lower().endswith('_path'):
+                        parent_dir = os.path.dirname(value)
+                        if parent_dir and not os.path.exists(parent_dir):
+                            os.makedirs(parent_dir, exist_ok=True)
+                        if not os.path.exists(value):
+                            with open(value, 'w', encoding='utf-8') as f:
+                                if 'fail' in key.lower():
+                                    f.write('ID,Reason\n')
+                                elif 'log' in key.lower():
+                                    f.write('ID\n')
+                    elif not os.path.exists(value):
+                        os.makedirs(os.path.dirname(value), exist_ok=True)
+                        with open(value, 'w', encoding='utf-8') as f:
+                            pass
+                except Exception as e:
+                    messagebox.showerror("创建失败", f"[{section}] {key} 自动创建失败：{e}")
                     return
+
             elif key.lower() in {'batch_size', 'num_batches', 'zoom', 'tile_size', 'tile_cols', 'tile_rows'}:
                 if not value.isdigit():
                     messagebox.showerror("输入格式错误", f"[{section}] {key} 必须是整数")
                     return
+
             elif key.lower() == 'sleeptime':
                 try:
                     float(value)
                 except ValueError:
                     messagebox.showerror("输入格式错误", f"[{section}] sleeptime 必须是浮点数")
                     return
+
             self.config[section][key] = value
 
         with open(INI_FILE, 'w', encoding='utf-8') as f:
@@ -186,7 +216,6 @@ class ConfigEditor:
 
         messagebox.showinfo("保存成功", f"配置文件已保存到 {INI_FILE}")
 
-    # 运行下载器脚本：在新命令行窗口中运行 work-ui.py，兼容打包路径
     def run_downloader(self):
         try:
             # 判断是否在 PyInstaller 打包环境中
@@ -195,10 +224,14 @@ class ConfigEditor:
             else:
                 base_path = os.path.dirname(os.path.abspath(__file__))
 
-            script_path = os.path.join(base_path, 'work-ui.py')
-            subprocess.Popen(['python', script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+            exe_path = os.path.join(base_path, 'work-ui.exe')
+
+            if not os.path.exists(exe_path):
+                raise FileNotFoundError(f"找不到打包的副程序 work-ui.exe：{exe_path}")
+
+            subprocess.Popen([exe_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
         except Exception as e:
-            messagebox.showerror("运行失败", f"无法运行下载器脚本：{e}")
+            messagebox.showerror("运行失败", f"无法启动下载器：{e}")
 
 # 启动主程序
 if __name__ == '__main__':

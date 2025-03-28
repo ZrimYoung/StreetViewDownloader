@@ -1,0 +1,26 @@
+# 忽略配置文件（如果含有 API Key）
+api_key_private.txt
+
+# 忽略保存图像的目录（如果你用 SAVE_DIR）
+output/
+images/
+downloads/
+
+# Python 缓存和环境
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+# VS Code 或其他编辑器的项目文件
+.vscode/
+.idea/
+
+# 虚拟环境目录（如果有）
+venv/
+env/
+
+# 日志文件
+
