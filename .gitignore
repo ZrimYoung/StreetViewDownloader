@@ -5,7 +5,10 @@ api_key_private.txt
 build/
 dist/
 upx.exe
-
+package_ui.bat
+package_downloader.bat
+*.bat
+*.spec
 
 # 忽略保存图像的目录（如果你用 SAVE_DIR）
 output/
