@@ -1,122 +1,154 @@
-# 🗺️ StreetViewDownloader
 
-一个基于 Python 的可视化工具，用于**批量下载并拼接 Google 街景图像**，支持通过 CSV 坐标点配置、参数自定义和 EXE 打包运行。
+# 🏙️ Google 街景图像批量下载工具
 
-
----
-
-## ✨ 功能特点
-
-- ✅ **图形化配置界面**（使用 `Tkinter`）便于设置路径、参数
-- ✅ **自动下载街景图像**，支持多批次处理 + 图块拼接
-- ✅ **兼容打包为 `.exe`**，无需 Python 环境即可运行
-- ✅ **日志记录** 成功和失败点，自动避免重复下载
-- ✅ 支持配置文件自动生成、路径校验、可视化下载进度
+本项目包含一个 **配置文件 GUI 编辑器** 和一个 **批量下载街景图像的主程序**，支持从指定点位读取、调用 Google Maps API 拼接图块、保存全景图像，并生成日志与结果表格。
 
 ---
 
-## 🗂️ 项目结构
+## 📁 文件结构
 
 ```
-StreetViewDownloader/
-├── GUI-RUN.py              # 主程序（推荐入口，带运行按钮）
-├── work-ui.py              # 副程序：街景下载逻辑
-├── configuration.ini       # 配置文件（可通过 GUI 自动生成）
-├── POINTS.csv              # 示例点位文件（含ID,Lat,Lng）
-├── api_key.txt             # 存储 Google Maps API Key
-├── icon.ico                # 打包使用的图标（可选）
-├── README.md               # 项目说明文件
-├── requirements.txt        # 项目依赖列表
-├── StreetViewDownloader.spec  # PyInstaller 打包配置文件
-├── dist/
-│   └── StreetViewDownloader/
-│       └── StreetViewDownloader.exe  # ✅ 已打包好的可执行文件
-└── build/                  # PyInstaller 构建缓存（可忽略）
+├── config_gui.py           # GUI 配置编辑器（可打包为 exe）
+├── DOWNLOAD.py             # 主下载脚本，支持多批次处理与图块拼接
+├── configuration.ini       # 配置文件（首次运行自动生成）
+├── POINTS.csv              # 输入点位文件（需包含 ID, Lat, Lng）
+├── api_key.txt             # Google API Key 文件
+└── output_dir/             # 下载图像和结果输出目录
 ```
 
 ---
 
-## 🚀 快速开始
+## 📦 环境配置
 
-### 1️⃣ 安装依赖（如使用源码）
+本项目基于 **Python 3.7+**，建议使用虚拟环境管理依赖。
+
+### ✅ 1. 安装 Python 依赖库
+
+在命令行终端中运行以下命令安装所需依赖：
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2️⃣ 启动配置界面
-```bash
-python GUI3.py
-```
-
-- 使用界面设置 `CSV路径`、`API Key`、输出目录等参数
-- 点击“保存配置”后再点击“运行下载器”开始下载
-
-### 3️⃣ 准备坐标点文件（CSV）
-CSV 文件应包含以下字段：
-```csv
-ID,Lat,Lng
-001,22.302711,114.177216
-002,22.284900,114.158917
-...
-```
-
----
-
-## 🧰 运行说明
-
-- `GUI3.py`：图形化配置工具，生成 `configuration.ini`
-- `work-ui.py`：通过 Google Maps Tile API 下载街景图块并拼接为全景图
-
-拼接结果保存在配置文件中指定的 `save_dir` 目录下，命名格式为：
-```
-<ID>_<panoId>.jpg
-```
-
----
-
-## 🔧 打包为 EXE（可选）
-
-如果你希望将其部署给非开发者用户，可使用以下命令打包为 `.exe`：
+或手动安装：
 
 ```bash
-pyinstaller --noconsole --add-data "work-ui.py;." --name "StreetViewDownloader" GUI3.py
+pip install pandas requests pillow tqdm
 ```
 
-打包成功后将在 `dist/StreetViewDownloader/StreetViewDownloader.exe` 中生成可运行程序。
+如需运行 GUI 编辑器，还需安装 Tkinter（大多数系统默认自带）：
+- Windows：已内置
+- macOS：建议使用系统 Python
+- Linux（如 Ubuntu）：
 
----
-
-## 📊 下载结果
-
-运行后程序会自动生成：
-
-- `download_log.csv`：已成功下载的 ID 记录
-- `failed_log.csv`：失败点及原因（无 panoId、拼接失败等）
-- `results_batch_*.csv`：每批次下载的详细结果（含文件名）
-
----
-
-## 📦 依赖库
-
-```txt
-pandas
-requests
-tqdm
-Pillow
+```bash
+sudo apt install python3-tk
 ```
 
 ---
 
-## 🧠 TODO / 可拓展功能
+## 🛠️ 项目使用流程
 
-- [ ] 多线程加速下载
-- [ ] 异常 tile 缓存与重试机制
-- [ ] 下载前地图可视化预览
-- [ ] 结合 Folium / Leaflet 展示拼接图坐标分布
+### 1️⃣ 准备数据
+
+- `POINTS.csv`：包含 `ID`, `Lat`, `Lng` ,`ang`的点位信息
+- `api_key.txt`：你的 Google API Key
 
 ---
 
-## 📜 License
+### 2️⃣ 使用 GUI 编辑配置文件（推荐方式）
 
-MIT License © 2025 ZrimYoung
+运行配置编辑器：
+
+```bash
+python GUI-RUN.py
+```
+
+或者运行打包后的可执行文件：
+
+```bash
+SVIDownloaderConfiguration.exe
+```
+
+配置参数包括：
+- 数据路径
+- 下载批次数
+- 图像拼接大小
+- 请求间隔时间等
+
+首次运行将自动生成 `configuration.ini` 配置文件和日志模板。
+
+---
+
+### 3️⃣ 启动图像下载程序
+
+运行主下载脚本：
+
+```bash
+python DOWNLOAD.py
+```
+
+功能包括：
+- 自动请求 panoId
+- 下载并拼接图块
+- 保存图像与批次结果
+- 记录成功与失败日志
+
+---
+
+## 🔧 配置文件结构说明
+
+`configuration.ini` 是程序的核心参数文件，示例如下：
+
+```ini
+[PATHS]
+csv_path = POINTS.csv
+api_key_path = api_key.txt
+save_dir = output_dir
+log_path = download_log.csv
+fail_log_path = failed_log.csv
+
+[PARAMS]
+batch_size = 10
+num_batches = 3
+
+[TILES]
+zoom = 1
+tile_size = 512
+tile_cols = 2
+tile_rows = 1
+sleeptime = 0.02
+```
+
+---
+
+
+## 📁 输出说明
+
+成功运行后，会生成以下内容：
+
+| 文件 | 说明 |
+|------|------|
+| `output_dir/*.jpg` | 拼接成功的街景图像 |
+| `download_log.csv` | 成功下载的 ID 记录 |
+| `failed_log.csv` | 下载失败 ID 与原因 |
+| `results_batch_*.csv` | 每批次的下载结果汇总 |
+
+---
+
+## ❗ 常见问题与提示
+
+| 问题 | 解决方案 |
+|------|----------|
+| API 报错 403 或无 session | 检查 API Key 是否启用了 *Street View Static API* 和 *Tile API* |
+| 图像为空白 | 图块拼接失败，检查 panoId 是否有效、tile 配置是否正确 |
+| 下载失败率高 | 增加 `sleeptime` 间隔，避免被限流 |
+| `.exe` 无法写入文件 | 避免将程序放在系统保护目录（如 C:\ 或桌面） |
+| 缺少 Tkinter 报错 | 安装 `python3-tk` 或用系统自带 Python 运行 |
+
+---
+
+
+
+
 
