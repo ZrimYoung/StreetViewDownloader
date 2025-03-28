@@ -18,15 +18,23 @@
 
 ## 🗂️ 项目结构
 
+## 🗂️ 项目结构
+
 ```
 StreetViewDownloader/
-├── GUI3.py               # 主程序：配置 GUI 编辑器
-├── work-ui.py            # 副程序：街景下载与拼接逻辑
-├── configuration.ini     # 自动生成的参数配置文件
-├── requirements.txt      # 所需依赖库清单
-├── .gitignore            # 忽略文件配置
-├── README.md             # 项目说明文件（当前这个）
-└── output_dir/           # 拼接图像输出目录（自动创建）
+├── GUI-RUN.py              # 主程序（推荐入口，带运行按钮）
+├── work-ui.py              # 副程序：街景下载逻辑
+├── configuration.ini       # 配置文件（可通过 GUI 自动生成）
+├── POINTS.csv              # 示例点位文件（含ID,Lat,Lng）
+├── api_key.txt             # 存储 Google Maps API Key
+├── icon.ico                # 打包使用的图标（可选）
+├── README.md               # 项目说明文件
+├── requirements.txt        # 项目依赖列表
+├── StreetViewDownloader.spec  # PyInstaller 打包配置文件
+├── dist/
+│   └── StreetViewDownloader/
+│       └── StreetViewDownloader.exe  # ✅ 已打包好的可执行文件
+└── build/                  # PyInstaller 构建缓存（可忽略）
 ```
 
 ---
