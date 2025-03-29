@@ -1,12 +1,6 @@
-# 增加多批次处理和批次进度条支持的 Google 街景图像下载脚本
-# ✅ 功能包括：
-#   - 从 CSV 文件读取点位信息
-#   - 使用 Google Maps API 批量请求街景图像并拼接
-#   - 支持配置文件自定义参数
-#   - 下载进度可视化（支持批次和单点拼接进度）
+# 多线程版本下载代码
 
 import os
-import json
 import requests
 import pandas as pd
 from PIL import Image
