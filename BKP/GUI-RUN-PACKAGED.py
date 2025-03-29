@@ -1,9 +1,4 @@
-# 修改后的配置文件 GUI 编辑器
-# - 自动创建默认 configuration.ini（若不存在）
-# - 支持文件/文件夹选择器，限制格式，检查路径/格式/日志等
-# - section 中文名称显示、分割线、固定窗口尺寸、微软雅黑字体
-# - ✅ 添加 "运行下载器" 按钮，弹出终端运行 work-ui.py
-# - ✅ 支持打包路径识别，确保 .exe 中可以调用副程序
+# 原版本配置文件 GUI 编辑器代码 使用打包exe唤起脚本
 
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
