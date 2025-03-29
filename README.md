@@ -51,7 +51,7 @@ sudo apt install python3-tk
 
 ### 1️⃣ 准备数据
 
-- `POINTS.csv`：包含 `ID`, `Lat`, `Lng` ,`ang`的点位信息
+- `POINTS.csv`：包含 `ID`, `Lat`, `Lng` 的点位信息
 - `api_key.txt`：你的 Google API Key
 
 ---
