@@ -1,4 +1,5 @@
-# 导入必要的库
+# 配置文件编辑器代码
+
 import tkinter as tk  # tkinter 是 Python 的标准 GUI 库
 from tkinter import ttk, messagebox, filedialog  # ttk 提供更美观的控件，messagebox 和 filedialog 用于对话框
 from configparser import ConfigParser  # 用于读取和写入 INI 配置文件
