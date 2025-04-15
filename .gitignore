@@ -8,6 +8,8 @@ upx.exe
 *.bat
 *.spec
 git-filter-repo.py
+Release/
+
 
 # 忽略保存图像的目录（如果你用 SAVE_DIR）
 output/
