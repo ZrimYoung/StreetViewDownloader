@@ -11,11 +11,12 @@ git-filter-repo.py
 Release/
 
 
-# 忽略保存图像的目录（如果你用 SAVE_DIR）
+
 output/
 images/
 downloads/
 BKP/
+FORMER_VER/
 
 
 # Python 缓存和环境
@@ -35,5 +36,4 @@ venv/
 env/
 
 # 日志文件
-
-BKP/GUI-RUN-PACKAGED.py
+*.log
