@@ -12,12 +12,12 @@
 ## 📁 1 文件结构
 
 ```
-├── config_gui.py           # GUI 配置编辑器（可打包为 exe）
-├── DOWNLOAD.py             # 主下载脚本，支持多批次处理与图块拼接
-├── configuration.ini       # 配置文件（首次运行自动生成）
-├── POINTS.csv              # 输入点位文件（需包含 ID, Lat, Lng）
-├── api_key.txt             # Google API Key 文件
-└── output_dir/             # 下载图像和结果输出目录
+┌ GUI-RUN.py                 # 配置文件图形化编辑器
+├ DOWNLOAD-Multithreads.py  # 多线程街景图像下载脚本
+├ configuration.ini         # 配置文件（首次运行自动生成）
+├ POINTS.csv                # 输入坐标点数据（需包含 ID, Lat, Lng）
+├ api_key.txt               # Google API Key 文件
+└ output_dir/               # 下载图像及结果保存目录
 ```
 
 ---
@@ -98,11 +98,13 @@ python DOWNLOAD-Multithreads.py #（多线程）
 ```
 
 
-功能包括：
-- 自动请求 panoId
-- 下载并拼接图块
-- 保存图像与批次结果
-- 记录成功与失败日志
+
+功能：
+- 自动创建 session 并获取 panoId
+- 使用多线程下载并拼接图像
+- 实时进度显示（`tqdm`）
+- 自动跳过已成功/失败记录（可配置是否重试失败项）
+- 输出成功图像、失败记录和批次结果
 
 
 
@@ -110,32 +112,29 @@ python DOWNLOAD-Multithreads.py #（多线程）
 
 程序运行依赖 `configuration.ini` 进行参数设定，包含三大部分：路径设置、下载控制、图块拼接设置。以下为字段解释：
 
-### `[PATHS]` 路径设置
+### [PATHS] 路径配置
+- `csv_path`: 点位输入文件路径
+- `api_key_path`: 存储 API Key 的文本路径
+- `save_dir`: 图像保存目录
+- `log_path`: 成功记录日志
+- `fail_log_path`: 失败记录日志
+- `detailed_log_path`: 详细日志（包含异常信息）
 
-| 参数 | 类型 | 示例值 | 说明 |
-|------|------|--------|------|
-| `csv_path` | 文件路径 | `POINTS.csv` | 包含 `ID`, `Lat`, `Lng` 的点位输入文件 |
-| `api_key_path` | 文件路径 | `api_key.txt` | 存储 Google API 密钥的文件 |
-| `save_dir` | 文件夹路径 | `output_dir` | 下载并保存拼接图像的目录 |
-| `log_path` | 文件路径 | `download_log.csv` | 成功下载记录的日志文件 |
-| `fail_log_path` | 文件路径 | `failed_log.csv` | 下载失败记录及原因 |
+### [PARAMS] 下载参数
+- `retry_failed_points`: 是否重试失败点位（True/False）
+- `batch_size`: 每批次最大下载数
+- `num_batches`: 总批次数
+- `max_point_workers`: 下载线程数（并发点位处理）
 
-### `[PARAMS]` 下载参数设置
+### [TILES] 图块参数
+- `zoom`: 图像缩放等级（0~5）
+- `tile_size`: 每个图块尺寸（px）
+- `tile_cols`, `tile_rows`: 拼接图块数（列 × 行）
+- `sleeptime`: 每张图块请求间隔（单位秒）
 
-| 参数 | 类型 | 示例值 | 说明 |
-|------|------|--------|------|
-| `batch_size` | 整数 | `10` | 每批次下载的最大图像数量 |
-| `num_batches` | 整数 | `3` | 下载总批次数（循环次数）|
+GUI 中支持图块参数预设选择（Zoom 0 - Zoom 5），也可启用自定义（Custom）。
 
-### `[TILES]` 图块拼接设置
-
-| 参数 | 类型 | 示例值 | 说明 |
-|------|------|--------|------|
-| `zoom` | 整数（0~5） | `1` | 缩放等级，数值越大图像越清晰，图块数量越多 |
-| `tile_size` | 整数 | `512` | 单个图块像素边长，建议为 512 |
-| `tile_cols` | 整数 | `2` | 横向图块数量 |
-| `tile_rows` | 整数 | `1` | 纵向图块数量 |
-| `sleeptime` | 浮点数 | `0.02` | 每张图块下载请求间隔时间（秒），可减少限流风险 |
+---
 
 ## 📐 5 图块(Tiles)参数说明
 
@@ -217,7 +216,7 @@ tile_rows = 2
 | `download_log.csv` | 成功下载的 ID 记录 |
 | `failed_log.csv` | 下载失败 ID 与原因 |
 | `results_batch_*.csv` | 每批次的下载结果汇总 |
-
+| `detailed_run.log` | 含异常栈信息的运行日志 |
 ---
 
 ## ❗ 8 常见问题与提示
