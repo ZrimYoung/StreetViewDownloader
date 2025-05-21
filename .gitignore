@@ -1,5 +1,6 @@
 # 忽略 API Key
 api_key_private.txt
+api_key.txt
 
 # 忽略构建文件
 build/
