@@ -355,18 +355,58 @@ if __name__ == "__main__":
         else: 
             print("Logger 未初始化，详细错误信息如下：")
             traceback.print_exc() 
+
+
         
         try: # 异常时也尝试保存已收集的失败和成功记录
             if 'failed_df_list' in locals() and failed_df_list:
-                # ... (与批次结束时类似的失败日志保存逻辑) ...
                 temp_failed_df_on_exit = pd.DataFrame(failed_df_list)
-                # (代码省略，与批次结束时保存失败日志的逻辑类似，合并旧日志并保存)
-                logger.info("程序异常退出前，尝试保存当前收集的失败记录。")
+                # 合并旧的失败日志并去重保存
+                if os.path.exists(FAIL_LOG_PATH):
+                    try:
+                        old_failed_df = pd.read_csv(FAIL_LOG_PATH)
+                        if not old_failed_df.empty and 'ID' in old_failed_df.columns and 'Reason' in old_failed_df.columns:
+                            combined_failed_df = pd.concat([old_failed_df, temp_failed_df_on_exit], ignore_index=True)
+                        else:
+                            combined_failed_df = temp_failed_df_on_exit
+                    except pd.errors.EmptyDataError:
+                        combined_failed_df = temp_failed_df_on_exit
+                    except Exception as e_read_old_fail:
+                        print(f"读取旧失败日志 '{FAIL_LOG_PATH}' 失败: {e_read_old_fail}。将仅保存当前运行的失败记录。")
+                        if logger: logger.error(f"读取旧失败日志 '{FAIL_LOG_PATH}' 失败: {e_read_old_fail}。将仅保存当前运行的失败记录。")
+                        combined_failed_df = temp_failed_df_on_exit
+                else:
+                    combined_failed_df = temp_failed_df_on_exit
 
+                if 'ID' in combined_failed_df.columns and 'Reason' in combined_failed_df.columns:
+                    combined_failed_df['ID'] = combined_failed_df['ID'].astype(str)
+                    combined_failed_df.drop_duplicates(subset=['ID', 'Reason'], keep='last').to_csv(FAIL_LOG_PATH, index=False)
+                if logger:
+                    logger.info("程序异常退出前，尝试保存当前收集的失败记录。")
 
             if 'current_run_log_list' in locals() and current_run_log_list:
-                # ... (与程序正常结束时类似的成功日志保存逻辑) ...
-                logger.info("程序异常退出前，尝试保存当前收集的成功记录。")
+                new_success_df = pd.DataFrame(current_run_log_list)
+                if os.path.exists(LOG_PATH):
+                    try:
+                        old_log_df = pd.read_csv(LOG_PATH)
+                        if 'ID' not in old_log_df.columns:
+                            combined_log_df = new_success_df
+                        else:
+                            combined_log_df = pd.concat([old_log_df, new_success_df], ignore_index=True)
+                    except pd.errors.EmptyDataError:
+                        combined_log_df = new_success_df
+                    except Exception as e_read_old_log:
+                        print(f"读取旧成功日志 '{LOG_PATH}' 失败: {e_read_old_log}。将仅保存当前运行的成功记录。")
+                        if logger: logger.error(f"读取旧成功日志 '{LOG_PATH}' 失败: {e_read_old_log}。将仅保存当前运行的成功记录。")
+                        combined_log_df = new_success_df
+                else:
+                    combined_log_df = new_success_df
+
+                if 'ID' in combined_log_df.columns:
+                    combined_log_df['ID'] = combined_log_df['ID'].astype(str)
+                    combined_log_df.drop_duplicates(subset=['ID'], keep='last').to_csv(LOG_PATH, index=False)
+                if logger:
+                    logger.info("程序异常退出前，尝试保存当前收集的失败记录。")
 
         except Exception as log_save_e:
             print(f"❌ 在异常处理中保存日志时也发生错误: {log_save_e}")
