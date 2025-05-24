@@ -13,6 +13,7 @@ This project includes a **GUI-based configuration editor** and a **multi-threade
 ```
 ┌ GUI-RUN.py                 # GUI configuration editor
 ├ DOWNLOAD-Multithreads.py  # Multi-threaded Street View image downloader
+├ process_panorama_images.py # Panoramic image black border detection and processing script
 ├ configuration.ini         # Configuration file (auto-generated on first run)
 ├ POINTS.csv                # Input coordinates file (must include ID, Lat, Lng)
 ├ api_key.txt               # Google API Key file
@@ -36,7 +37,7 @@ pip install -r requirements.txt
 Or manually:
 
 ```bash
-pip install pandas requests pillow tqdm
+pip install pandas requests pillow tqdm opencv-python
 ```
 
 To run the GUI editor, Tkinter is also needed (included by default on most systems):
@@ -104,6 +105,33 @@ Features:
 
 ---
 
+### 4️⃣ Process Panoramic Images (Optional)
+
+If your downloaded panoramic images have bottom black border issues, you can use the image processing script for automatic repair:
+
+```bash
+python process_panorama_images.py
+```
+
+Key Features:
+- **Smart Black Border Detection**: Optimized specifically for bottom black border detection
+- **Automatic Crop & Repair**: Crops from top-left corner, maintains 2:1 aspect ratio
+- **Multi-threaded Processing**: Supports batch parallel processing for significant speed improvement
+- **Progress Saving**: Supports interruption recovery to avoid reprocessing
+- **Categorized Management**:
+  - Normal images: Keep in original location
+  - Images with black borders: Original moved to `problematic/` folder, processed images saved to `edit/` folder
+- **Detailed Logging**: Records processing progress and statistics
+
+**Configuration** (modify at the top of the script):
+- `INPUT_DIR`: Input image directory (default: `"panoramas_test"`)
+- `OUTPUT_DIR`: Processed image output directory (default: `"edit"`)
+- `PROBLEMATIC_DIR`: Problematic image directory (default: `"problematic"`)
+- `NUM_WORKERS`: Number of parallel processing threads (default: 15)
+- `BLACK_THRESHOLD`: Black border detection threshold (default: 15)
+
+---
+
 ## 🛠️ 4. Configuration File Structure
 
 The program uses `configuration.ini` for all parameters. It contains three main sections:
@@ -166,7 +194,6 @@ The project uses the [Google Maps Tile API](https://developers.google.com/maps/d
 1. Visit [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a project and enable:
    - Maps Tile API
-   - Street View Static API (optional backup)
 3. Generate an API key and save it to `api_key.txt`
 
 ### 🗺️ Image Download Workflow
@@ -202,17 +229,29 @@ After successful runs, the following files will be generated:
 | `results_batch_*.csv` | Per-batch result summaries |
 | `detailed_run.log` | Full log including exceptions |
 
+**After using the panoramic image processing script:**
+
+| File/Folder | Description |
+|-------------|-------------|
+| `edit/*.jpg` | Processed images (black borders removed and repaired) |
+| `problematic/*.jpg` | Original images with detected black border issues |
+| `processing_progress.json` | Processing progress save file (supports interruption recovery) |
+| `panorama_processing_*.log` | Detailed image processing logs |
+
 ---
 
 ## ❗ 8. Common Issues & Tips
 
 | Issue | Solution |
 |-------|----------|
-| 403 or no session | Check if API has Tile API and Street View Static API enabled |
+| 403 or no session | Check if API has Tile API enabled |
 | Blank image | Possibly invalid panoId or tile config error |
 | High failure rate | Increase `sleeptime` to avoid rate limits |
 | `.exe` can't write files | Avoid protected directories like `C:\` or desktop |
 | Missing Tkinter | Install `python3-tk` or use system Python |
+| Image processing script won't run | Make sure `opencv-python` is installed: `pip install opencv-python` |
+| Processing script can't find images | Check if `INPUT_DIR` configuration is correct and images exist in directory |
+| Processed image quality degraded | Adjust `BLACK_THRESHOLD` value or check original image quality |
 
 ---
 
