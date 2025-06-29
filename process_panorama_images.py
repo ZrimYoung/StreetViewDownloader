@@ -11,7 +11,7 @@
 
 # 基本设置
 INPUT_DIR = "panoramas_test"           # 输入图片目录
-OUTPUT_DIR = "edit"                    # 处理后图片输出目录  
+OUTPUT_DIR = "edit"                    # 处理后图片输出目录 
 PROBLEMATIC_DIR = "problematic"        # 有问题图片移动目录
 
 # 处理参数
@@ -160,10 +160,9 @@ class OptimizedPanoramaProcessor:
         
         # 从底部向上检测黑边
         valid_bottom = h
-        # 只检查底部的一部分，提高效率
-        check_rows = min(h // 2, 200)  # 最多检查200行或图片高度的一半
         
-        for i in range(h-1, h-check_rows-1, -1):
+        # 优化：从底部向上完整扫描，找到第一个非黑像素行即可确定边界
+        for i in range(h - 1, -1, -1):
             if np.mean(gray[i, :]) > self.black_threshold:
                 valid_bottom = i + 1
                 break
